@@ -11,16 +11,16 @@
 ; Public interfaces / reserved memory registers
 ;
 .equ SBR_STATE,             0x00
-.equ SBR_BYTES_REMAINING    0x01
-.equ SBR_MY_ADDRESS         0x02
-.equ SBR_CUR_FRAME_TYPE     0x03
+.equ SBR_BYTES_REMAINING,   0x01
+.equ SBR_MY_ADDRESS,        0x02
+.equ SBR_CUR_FRAME_TYPE,    0x03
 .equ SBR_GP_1,              0x04
 .equ SBR_GP_2,              0x05
 
 ;
 ; Internal aliases for the memory registers
 ;
-.equ SBR_GP_ADDRESS         SBR_GP_1    ; The address of the frame
+.equ SBR_GP_ADDRESS,        SBR_GP_1    ; The address of the frame
 
 ;
 ; General definitions
