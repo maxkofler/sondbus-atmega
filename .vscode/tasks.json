@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Make",
+      "type": "shell",
+      "command": "make"
+    },
+    {
+      "label": "Start and run SimAVR",
+      "type": "shell",
+      "command": "simavr",
+      "args": ["-g", "-m", "atmega2560", "sondbus-asm"],
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ],
+      "isBackground": true,
+
+      "dependsOn": "Make"
+    },
+    {
+      "label": "Stop SimAVR",
+      "type": "shell",
+      "command": "pkill",
+      "args": ["simavr"],
+      "problemMatcher": []
+    }
+  ]
+}
