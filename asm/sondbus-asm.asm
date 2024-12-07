@@ -9,9 +9,13 @@
 
 .global sondbus_handle
 
+.global sb_update_crc
 .global sb_handle_return
 .global sb_next_state_and_return
 .global sb_new_state_and_return
+
+.global sb_state_handler_ping
+.equ sb_state_handler_ping, ((state_handler_ping - state_trampoline) / 2)
 
 ; Process an incoming byte from the sondbus interface
 ; Call Registers:
@@ -59,6 +63,13 @@ state_trampoline:
     rjmp sb_state_wait_for_type
     rjmp sb_state_wait_for_address
     rjmp sb_state_wait_for_length
+state_handler_ping:
+    rjmp sb_state_handler_ping_wait_for_payload
+    rjmp sb_state_handler_ping_wait_for_crc
+    rjmp sb_state_handler_ping_tx_type
+    rjmp sb_state_handler_ping_tx_address
+    rjmp sb_state_handler_ping_tx_length
+    rjmp sb_state_handler_ping_tx_crc
 
 ;   --- Return
 sb_handle_return:
@@ -84,6 +95,20 @@ sb_next_state_and_return:
 sb_new_state_and_return:
     st X, r22
     jmp sb_handle_return
+
+sb_update_crc:
+    push r24
+
+    adiw X, SBR_TEMP_CRC
+    ld r24, X
+
+    call sb_crc8_update
+
+    st X, r24
+    sbiw X, SBR_TEMP_CRC
+
+    pop r24
+    ret
 
 sondbus_state_out_of_bounds:
     ; TODO: Handle this
