@@ -6,7 +6,7 @@ AS=${CC}
 LD=${CC}
 
 CCFLAGS=-g -mmcu=${MCU}
-ASFLAGS=-g -mmcu=${MCU} -xassembler
+ASFLAGS=-g -mmcu=${MCU} -xassembler -Iasm
 LDFLAGS=-g -mmcu=${MCU}
 
 ASMFILES+=asm/sondbus-asm.asm.o
