@@ -14,8 +14,9 @@
 .equ SBR_BYTES_REMAINING,   0x01
 .equ SBR_MY_ADDRESS,        0x02
 .equ SBR_CUR_FRAME_TYPE,    0x03
-.equ SBR_GP_1,              0x04
-.equ SBR_GP_2,              0x05
+.equ SBR_TEMP_CRC,          0x04
+.equ SBR_GP_1,              0x05
+.equ SBR_GP_2,              0x06
 
 ;
 ; Internal aliases for the memory registers
@@ -125,6 +126,12 @@ sondbus_state_wait_for_start:
     breq sondbus_state_wait_for_start_eq
     jmp sondbus_rx_return
 sondbus_state_wait_for_start_eq:
+    adiw X, SBR_TEMP_CRC
+    ldi r24, SB_CRC_INIT
+    call sb_crc8_update
+    st X, r24
+    sbiw X, SBR_TEMP_CRC
+
     jmp sondbus_rx_next_state_and_return
 
 ;
@@ -132,6 +139,7 @@ sondbus_state_wait_for_start_eq:
 ;
 .org(sondbus_state_trampoline + (SB_STATE_SIZE))
 sondbus_state_wait_for_type:
+    call update_crc
     ldi r17, SBR_CUR_FRAME_TYPE
     ldi r18, 0
     add XL, r17
@@ -149,6 +157,7 @@ sondbus_state_wait_for_type:
 ;
 .org(sondbus_state_trampoline + (SB_STATE_SIZE * 2))
 sondbus_state_wait_for_address:
+    call update_crc
     ldi r17, SBR_GP_ADDRESS
     ldi r18, 0
     add XL, r17
@@ -166,6 +175,7 @@ sondbus_state_wait_for_address:
 ;
 .org(sondbus_state_trampoline + (SB_STATE_SIZE * 3))
 sondbus_state_wait_for_length:
+    call update_crc
     adiw X, SBR_BYTES_REMAINING
     st X, r22
     sbiw X, SBR_BYTES_REMAINING
@@ -194,6 +204,7 @@ sondbus_state_wait_for_length_unknown_type:
 ;
 .org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x10))
 sondbus_state_ping_rx:
+    call update_crc
     adiw X, SBR_BYTES_REMAINING
     ld r22, X
 
@@ -208,31 +219,62 @@ sondbus_state_ping_rx:
     jmp sondbus_rx_return
 
 sondbus_state_ping_rx_done:
+    jmp sondbus_rx_next_state_and_return
+
+.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x11))
+sondbus_state_ping_wait_for_crc:
+    ; r22 holds the crc
+
+    ; Load the temporary CRC
+    adiw X, SBR_TEMP_CRC
+    ld r24, X
+    sbiw X, SBR_TEMP_CRC
+
+    call sb_crc8_finalize
+
+    cp r24, r22
+
+    breq sondbus_state_ping_good_crc
+
+    ; If the CRC is bad, go back to idle
+    ldi r24, 0
+    st X, r24
+
+sondbus_state_ping_good_crc:
     sbr r25, 0b1
     ldi r24, SB_START_BYTE
     jmp sondbus_rx_next_state_and_return
 
-.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x11))
+.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x12))
 sondbus_state_ping_type:
     sbr r25, 0b1
     ldi r24, SB_FT_PING
     jmp sondbus_rx_next_state_and_return
 
-.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x12))
+.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x13))
 sondbus_state_ping_address:
     sbr r25, 0b1
     ldi r24, 0
     jmp sondbus_rx_next_state_and_return
 
-.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x13))
+.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x14))
 sondbus_state_ping_length:
     sbr r25, 0b1
     ldi r24, 0
     jmp sondbus_rx_next_state_and_return
 
-.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x14))
+.org(sondbus_state_trampoline + (SB_STATE_SIZE * 0x15))
 sondbus_state_ping_crc:
     sbr r25, 0b1
     ldi r24, 0
     st X, r24
     jmp sondbus_rx_return
+
+; Expects new value at r22
+update_crc:
+    adiw X, SBR_TEMP_CRC
+    ld r24, X
+    call sb_crc8_update
+    st X, r24
+    sbiw X, SBR_TEMP_CRC
+    ret

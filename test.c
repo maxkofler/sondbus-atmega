@@ -18,6 +18,8 @@ typedef struct __attribute__((__packed__))
     uint8_t my_address;
     /// @brief  The current frame type that is being processed
     uint8_t cur_frame_type;
+    /// @brief  The current value for the CRC
+    uint8_t crc;
     uint8_t gp_1;
     uint8_t gp_2;
     uint8_t gp_3;
