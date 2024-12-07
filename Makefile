@@ -11,6 +11,7 @@ LDFLAGS=-g -mmcu=${MCU}
 
 ASMFILES+=asm/sondbus-asm.asm.o
 ASMFILES+=asm/crc8.asm.o
+ASMFILES+=asm/sondbus-frame.asm.o
 
 CFILES+=test.c.o
 
