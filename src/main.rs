@@ -15,7 +15,7 @@ use embedded_time::{
 };
 use sondbus::{ringbuf::RingBuffer, Slave};
 
-static mut BUFFER: Option<RingBuffer<u8, 0xF>> = None;
+static mut BUFFER: Option<RingBuffer<u8, 0x10>> = None;
 
 #[panic_handler]
 fn panic_handler(_panic_info: &PanicInfo) -> ! {
@@ -51,7 +51,8 @@ fn main() -> ! {
 
     dp.TC1.tccr1b.write(|f| f.cs1().prescale_8());
 
-    let buffer = RingBuffer::new();
+    let buffer = [0u8; 0x10];
+    let buffer = RingBuffer::new(buffer);
     unsafe { BUFFER = Some(buffer) }
 
     let mut serial = arduino_hal::default_serial!(dp, pins, 1_000_000);
@@ -82,7 +83,7 @@ fn main() -> ! {
         }
 
         if let Some(buffer) = unsafe { &mut BUFFER } {
-            if let Some(ret) = slave.handle_mut(buffer.pop()) {
+            if let Some(ret) = slave.handle_mut(buffer.pop().cloned()) {
                 serial.write_byte(ret);
             }
         }
