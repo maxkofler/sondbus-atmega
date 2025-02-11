@@ -32,3 +32,17 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
+
+# Building ASM files
+
+Using the compiler to compile `.S` files:
+
+```bash
+avr-gcc -mmcu=atmega2560 <file>.S
+```
+
+# Linking another asm file to rust
+
+```bash
+argo rustc -- -Clink-arg=<object file>
+```
